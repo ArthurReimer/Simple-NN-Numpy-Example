@@ -8,7 +8,7 @@ import tensorflow as tf
 
 # --------------------------------------------------------------------------------------------------
 # ERRORS:
-# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt
+# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt (es ist zufällig?)
 # - Wenn die Neuronenanzahl von den Hiddenlayers unter dem des outputs ist, gibt es ein Formatfehler
 # - Loss wirkt nicht linear oder regelmäßig
 # --------------------------------------------------------------------------------------------------
@@ -44,13 +44,13 @@ class NeuralNetwork:
                 for _ in range(0, layer.neuron_amount):
                     neuron_weights = []
                     for _ in range(0, self.input_length):
-                        neuron_weights.append(random.random())
+                        neuron_weights.append(0.5)
                     layer_weights.append(neuron_weights)
             else:
                 for _ in range(0, layer.neuron_amount):
                     neuron_weights = []
                     for _ in range(0, self.layers[l_index - 1].neuron_amount):
-                        neuron_weights.append(random.random())
+                        neuron_weights.append(0.5)
                     layer_weights.append(neuron_weights)
 
             layer.weights = layer_weights
@@ -113,6 +113,9 @@ class NeuralNetwork:
                 layer.delta_values = (expected_values - layer.activations) * layer.derivatives
             else:
                 delta_values = []
+                
+                previous_layer = reversed_layers[layer_index - 1]
+
 
                 for neuron_index in range(layer.neuron_amount):
                     weighted_sum = 0
@@ -150,7 +153,6 @@ class NeuralNetwork:
                 delta_bias = learning_rate * layer.delta_values[neuron_index]
                 layer.biases[neuron_index] += delta_bias
             
-            previous_layer = layer
             self.current_inputs = layer.activations
 
 def MSE_Loss(predicted, target):
@@ -193,7 +195,7 @@ NN.create_random_biases()
 # print(NN.layers[0].weights)
 
 correct_predictions = 0
-total_samples = 1000
+total_samples = 3
 
 for i in range(total_samples):
     NN.forward_pass(flatten(train_X[i]))
@@ -210,5 +212,3 @@ for i in range(total_samples):
 
 accuracy = correct_predictions / total_samples
 print(f"\nFinal Accuracy after {total_samples} samples: {accuracy * 100:.2f}%")
-
-
