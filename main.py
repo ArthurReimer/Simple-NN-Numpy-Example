@@ -3,6 +3,21 @@ import numpy as np
 import time
 import tensorflow as tf
 
+
+
+
+# --------------------------------------------------------------------------------------------------
+# ERRORS:
+# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt
+# - Wenn die Neuronenanzahl von den Hiddenlayers unter dem des outputs ist, gibt es ein Formatfehler
+# - Loss wirkt nicht linear oder regelmäßig
+# --------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 class NeuronLayer:
     def __init__(self, neuron_amount):
         self.neurons = []
@@ -197,9 +212,3 @@ accuracy = correct_predictions / total_samples
 print(f"\nFinal Accuracy after {total_samples} samples: {accuracy * 100:.2f}%")
 
 
-# --------------------------------------------------------------------------------------------------
-# ERRORS:
-# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt
-# - Wenn die Neuronenanzahl von den Hiddenlayers unter dem des outputs ist, gibt es ein Formatfehler
-# - Loss wirkt nicht linear oder regelmäßig
-# --------------------------------------------------------------------------------------------------
