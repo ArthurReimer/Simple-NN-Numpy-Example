@@ -67,7 +67,7 @@ class NeuralNetwork:
                 previous_layer = self.layers[layer_index-1]
 
                 for neuron_index in range(0, layer.neuron_amount):
-                    net_input = sum(layer.weights[neuron_index] * previous_layer.activations) + layer.biases[neuron_index]
+                    net_input = sum(layer.weights[neuron_index] * previous_layer.net_inputs) + layer.biases[neuron_index]
                     net_inputs.append(net_input)
 
                     activation = self.sigmoid(net_input)
@@ -78,9 +78,7 @@ class NeuralNetwork:
             self.current_inputs = layer.activations
 
             if layer_index == len(self.layers)-1:
-                # print(np.argmax(layer.activations))
-                # print(layer.activations)
-                ...
+                print(layer.activations)
 
     def return_output(self):
         return self.layers[-1].activations
@@ -91,7 +89,6 @@ class NeuralNetwork:
         for layer_index, layer in enumerate(reversed_layers):
             layer.derivatives = layer.activations * (1-layer.activations)
             
-            # delta Calculation
             if layer_index == 0:
                 layer.delta_values = (expected_values - layer.activations) * layer.derivatives
             else:
@@ -108,13 +105,17 @@ class NeuralNetwork:
 
                 layer.delta_values = np.array(delta_values)
 
-
-            # delta weight calculation and weight change
-            next_layer = reversed_layers[layer_index+1]
-            for neuron_index in range(layer.neuron_amount):
-                for weight_index in range(len(layer.weights[neuron_index])):
-                    delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
-                    layer.weights[neuron_index][weight_index] += delta_weight
+            if layer_index == len(self.layers)-1:
+                for neuron_index in range(layer.neuron_amount):
+                    for weight_index in range(len(layer.weights[neuron_index])):
+                        delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
+                        layer.weights[neuron_index][weight_index] += delta_weight
+            else:
+                next_layer = reversed_layers[layer_index+1]
+                for neuron_index in range(layer.neuron_amount):
+                    for weight_index in range(len(layer.weights[neuron_index])):
+                        delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
+                        layer.weights[neuron_index][weight_index] += delta_weight
 
             for neuron_index in range(layer.neuron_amount):
                 delta_bias = learning_rate * layer.delta_values[neuron_index]
@@ -147,44 +148,19 @@ mnist = tf.keras.datasets.mnist
 
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
-train_X = train_X / 255.0
-test_X = test_X / 255.0
-
 inputs = np.array(flatten(train_X[0]))
 
 NN = NeuralNetwork(
-    [NeuronLayer(4),NeuronLayer(4),NeuronLayer(10)],
+    [NeuronLayer(16),NeuronLayer(16),NeuronLayer(10)],
     len(inputs)
 )
 
 NN.create_random_weights()
 NN.create_random_biases()
 
-print(NN.layers[0].weights)
-
-for i in range(0, 100):
-    # PREDICTION NOT A NUMBER. CRITICAL ERROR
+for i in range(0, 2):
     NN.forward_pass(flatten(train_X[i]))
     prediction = NN.layers[len(NN.layers)-1].activations
-    NN.backwards_pass(0.005, train_y[i])
+    NN.backwards_pass(0.5, train_y[i])
     loss = MSE_Loss(predicted=prediction, target=train_y[i])
-    # print(loss)
-
-print()
-print()
-print()
-print(NN.layers[0].weights)
-
-# NN.forward_pass(flatten(train_X[5]))
-# prediction = max(NN.layers[len(NN.layers)-1].activations)
-# number = train_y[5]
-# print("Prediciton: ", prediction, "   Actual Number: ", number)
-
-
-# for i in range(0,100):
-#     target = train_y[i]
-#     array_traget = format_target(target)
-
-#     print(array_traget, "__", target)
-
-
+    print(loss)
