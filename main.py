@@ -18,6 +18,7 @@ class NeuralNetwork:
     def __init__(self, layers, input_length):
         self.layers = layers
         self.input_length = input_length
+        self.inputs = None
         self.current_inputs = None
 
     def create_random_weights(self):
@@ -51,6 +52,7 @@ class NeuralNetwork:
 
     def forward_pass(self, inputs: np.array):
         self.current_inputs = inputs
+        self.inputs = inputs
 
         for layer_index, layer in enumerate(self.layers):
             net_inputs = []
@@ -67,7 +69,7 @@ class NeuralNetwork:
                 previous_layer = self.layers[layer_index-1]
 
                 for neuron_index in range(0, layer.neuron_amount):
-                    net_input = sum(layer.weights[neuron_index] * previous_layer.net_inputs) + layer.biases[neuron_index]
+                    net_input = sum(layer.weights[neuron_index] * previous_layer.activations) + layer.biases[neuron_index]
                     net_inputs.append(net_input)
 
                     activation = self.sigmoid(net_input)
@@ -78,7 +80,9 @@ class NeuralNetwork:
             self.current_inputs = layer.activations
 
             if layer_index == len(self.layers)-1:
-                print(layer.activations)
+                # print(np.argmax(layer.activations))
+                # print(layer.activations)
+                ...
 
     def return_output(self):
         return self.layers[-1].activations
@@ -89,6 +93,7 @@ class NeuralNetwork:
         for layer_index, layer in enumerate(reversed_layers):
             layer.derivatives = layer.activations * (1-layer.activations)
             
+            # delta Calculation
             if layer_index == 0:
                 layer.delta_values = (expected_values - layer.activations) * layer.derivatives
             else:
@@ -105,17 +110,26 @@ class NeuralNetwork:
 
                 layer.delta_values = np.array(delta_values)
 
+
+            # delta weight calculation and weight change
             if layer_index == len(self.layers)-1:
+
                 for neuron_index in range(layer.neuron_amount):
                     for weight_index in range(len(layer.weights[neuron_index])):
-                        delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
+                        delta_weight = learning_rate * layer.delta_values[neuron_index] * self.sigmoid(self.inputs[weight_index])
                         layer.weights[neuron_index][weight_index] += delta_weight
+                        # print("DW: ", delta_weight)
+                        # print("delta value: ", layer.delta_values[neuron_index])
+                        # print("next layer activation: ", next_layer.activations[neuron_index])
             else:
                 next_layer = reversed_layers[layer_index+1]
                 for neuron_index in range(layer.neuron_amount):
                     for weight_index in range(len(layer.weights[neuron_index])):
                         delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
                         layer.weights[neuron_index][weight_index] += delta_weight
+                        # print("DW: ", delta_weight)
+                        # print("delta value: ", layer.delta_values[neuron_index])
+                        # print("next layer activation: ", next_layer.activations[neuron_index])
 
             for neuron_index in range(layer.neuron_amount):
                 delta_bias = learning_rate * layer.delta_values[neuron_index]
@@ -148,6 +162,9 @@ mnist = tf.keras.datasets.mnist
 
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
+train_X = train_X / 255.0
+test_X = test_X / 255.0
+
 inputs = np.array(flatten(train_X[0]))
 
 NN = NeuralNetwork(
@@ -158,9 +175,31 @@ NN = NeuralNetwork(
 NN.create_random_weights()
 NN.create_random_biases()
 
-for i in range(0, 2):
+# print(NN.layers[0].weights)
+
+correct_predictions = 0
+total_samples = 1000
+
+for i in range(total_samples):
     NN.forward_pass(flatten(train_X[i]))
-    prediction = NN.layers[len(NN.layers)-1].activations
-    NN.backwards_pass(0.5, train_y[i])
-    loss = MSE_Loss(predicted=prediction, target=train_y[i])
-    print(loss)
+    output = NN.return_output()
+    prediction = np.argmax(output)
+
+    if prediction == train_y[i]:
+        correct_predictions += 1
+
+    NN.backwards_pass(0.0005, format_target(train_y[i]))
+
+    loss = MSE_Loss(predicted=output, target=format_target(train_y[i]))
+    print(f"Loss: {loss}, Prediction: {prediction}, Actual: {train_y[i]}")
+
+accuracy = correct_predictions / total_samples
+print(f"\nFinal Accuracy after {total_samples} samples: {accuracy * 100:.2f}%")
+
+
+# --------------------------------------------------------------------------------------------------
+# ERRORS:
+# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt
+# - Wenn die Neuronenanzahl von den Hiddenlayers unter dem des outputs ist, gibt es ein Formatfehler
+# - Loss wirkt nicht linear oder regelmäßig
+# --------------------------------------------------------------------------------------------------
