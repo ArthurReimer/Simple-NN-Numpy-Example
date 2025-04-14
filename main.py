@@ -4,20 +4,6 @@ import time
 import tensorflow as tf
 
 
-
-
-# --------------------------------------------------------------------------------------------------
-# ERRORS:
-# - NN hat von Anfang an einen Output zu dem es immer gleich bleibt (es ist zufällig?)
-# - Wenn die Neuronenanzahl von den Hiddenlayers unter dem des outputs ist, gibt es ein Formatfehler
-# - Loss wirkt nicht linear oder regelmäßig
-# --------------------------------------------------------------------------------------------------
-
-
-
-
-
-
 class NeuronLayer:
     def __init__(self, neuron_amount):
         self.neurons = []
@@ -44,13 +30,13 @@ class NeuralNetwork:
                 for _ in range(0, layer.neuron_amount):
                     neuron_weights = []
                     for _ in range(0, self.input_length):
-                        neuron_weights.append(0.5)
+                        neuron_weights.append((random.random()-0.5)*2)
                     layer_weights.append(neuron_weights)
             else:
                 for _ in range(0, layer.neuron_amount):
                     neuron_weights = []
                     for _ in range(0, self.layers[l_index - 1].neuron_amount):
-                        neuron_weights.append(0.5)
+                        neuron_weights.append((random.random()-0.5)*2)
                     layer_weights.append(neuron_weights)
 
             layer.weights = layer_weights
@@ -59,11 +45,14 @@ class NeuralNetwork:
         for _, layer in enumerate(self.layers):
             layer_biases = []
             for neuron in range(layer.neuron_amount):
-                layer_biases.append(random.random())
+                layer_biases.append((random.random()-0.5)*2)
             layer.biases = np.array(layer_biases)
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
+    
+    def sigmoid_deriv(self, x):
+        return self.sigmoid(x) * (1 - self.sigmoid(x))
 
     def forward_pass(self, inputs: np.array):
         self.current_inputs = inputs
@@ -80,6 +69,7 @@ class NeuralNetwork:
 
                     activation = self.sigmoid(net_input)
                     neuron_activations.append(activation)
+                # print(min(neuron_activations))
             else:
                 previous_layer = self.layers[layer_index-1]
 
@@ -106,23 +96,29 @@ class NeuralNetwork:
         reversed_layers = list(reversed(self.layers))
 
         for layer_index, layer in enumerate(reversed_layers):
-            layer.derivatives = layer.activations * (1-layer.activations)
-            
+            layer.derivatives = self.sigmoid_deriv(layer.net_inputs)
+            # print(max(layer.derivatives))
             # delta Calculation
+            # | Output layer: δ = f'(netzinput) * (a(soll) - a(ist))
+            # | Hidden layer: δ = f'(netzinput) * Σ(δ * w)
+            # Quelle: https://www.youtube.com/watch?v=EAtQCut6Qno&t=266s
+
             if layer_index == 0:
                 layer.delta_values = (expected_values - layer.activations) * layer.derivatives
             else:
                 delta_values = []
-                
-                previous_layer = reversed_layers[layer_index - 1]
 
+                previous_layer = reversed_layers[layer_index - 1]
 
                 for neuron_index in range(layer.neuron_amount):
                     weighted_sum = 0
 
                     for neuron in range(previous_layer.neuron_amount):
+                        # print("W: ", previous_layer.weights[neuron][neuron_index])
+                        # print("δ: ", previous_layer.delta_values[neuron])
                         weighted_sum += previous_layer.weights[neuron][neuron_index] * previous_layer.delta_values[neuron]
                     
+                    # print(layer.derivatives[neuron_index])
                     delta = weighted_sum * layer.derivatives[neuron_index]
                     delta_values.append(delta)
 
@@ -130,18 +126,23 @@ class NeuralNetwork:
 
 
             # delta weight calculation and weight change
+
             if layer_index == len(self.layers)-1:
 
                 for neuron_index in range(layer.neuron_amount):
+
                     for weight_index in range(len(layer.weights[neuron_index])):
                         delta_weight = learning_rate * layer.delta_values[neuron_index] * self.sigmoid(self.inputs[weight_index])
                         layer.weights[neuron_index][weight_index] += delta_weight
                         # print("DW: ", delta_weight)
                         # print("delta value: ", layer.delta_values[neuron_index])
                         # print("next layer activation: ", next_layer.activations[neuron_index])
+
             else:
                 next_layer = reversed_layers[layer_index+1]
+
                 for neuron_index in range(layer.neuron_amount):
+
                     for weight_index in range(len(layer.weights[neuron_index])):
                         delta_weight = learning_rate * layer.delta_values[neuron_index] * next_layer.activations[neuron_index]
                         layer.weights[neuron_index][weight_index] += delta_weight
@@ -185,19 +186,18 @@ test_X = test_X / 255.0
 inputs = np.array(flatten(train_X[0]))
 
 NN = NeuralNetwork(
-    [NeuronLayer(16),NeuronLayer(16),NeuronLayer(10)],
+    [NeuronLayer(128),NeuronLayer(10)],
     len(inputs)
 )
 
 NN.create_random_weights()
 NN.create_random_biases()
 
-# print(NN.layers[0].weights)
 
 correct_predictions = 0
-total_samples = 3
+total_samples = len(train_X)
 
-for i in range(total_samples):
+for i in range(0, len(train_X)):
     NN.forward_pass(flatten(train_X[i]))
     output = NN.return_output()
     prediction = np.argmax(output)
@@ -205,9 +205,9 @@ for i in range(total_samples):
     if prediction == train_y[i]:
         correct_predictions += 1
 
-    NN.backwards_pass(0.0005, format_target(train_y[i]))
+    NN.backwards_pass(0.01, format_target(train_y[i]))
 
-    loss = MSE_Loss(predicted=output, target=format_target(train_y[i]))
+    loss = MSE_Loss(predicted=output, target=format_target(train_y[i])) / 10
     print(f"Loss: {loss}, Prediction: {prediction}, Actual: {train_y[i]}")
 
 accuracy = correct_predictions / total_samples
