@@ -18,6 +18,9 @@ import numpy as np
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+def deriv_sigmoid(activations):
+    return activations * (1-activations)
+
 class Layer:
     def __init__(self, input_amount, neuron_amount):
         self.neuron_amount = neuron_amount
@@ -47,16 +50,39 @@ class NN:
             layer.net_inputs = np.dot(layer.weights, current_inputs) + layer.biases
             current_inputs = layer.net_inputs
             layer.activations = sigmoid(layer.net_inputs)
-            print(layer.net_inputs)
-            print(layer.activations)
 
+    def backward_pass(self, inputs, learning_rate, target):
+        for i in reversed(range(len(self.layers))):
+            layer = self.layers[i]
+            if i == len(self.layers) - 1:
+                layer.deltas = deriv_sigmoid(layer.activations) * (target - layer.activations)
+            else:
+                next_layer = self.layers[i + 1]
+                layer.deltas = deriv_sigmoid(layer.activations) * np.dot(next_layer.weights.T, next_layer.deltas)
+
+            prev_activations = inputs if i == 0 else self.layers[i - 1].activations
+
+            delta_weight = learning_rate * np.outer(prev_activations, layer.deltas).T
+            delta_biases = learning_rate * layer.biases
+
+            layer.weights += delta_weight
+            layer.biases += delta_biases
+            
+def binary_cross_entropy(y_pred, y_true, epsilon=1e-12):
+    y_pred = np.clip(y_pred, epsilon, 1. - epsilon)
+    loss = - (y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+    return np.mean(loss)
+
+
+inputs = np.array([0.1, 0.2, 0.1, 0.3, 0.5])
 
 
 nn = NN()
-nn.add_layer(5, 4)
-nn.add_layer(4, 2)
+nn.add_layer(5, 4) # Hidden layer
+nn.add_layer(4, 2) # Output layer
 nn.setup()
-nn.forward_pass(np.array([0.1, 0.2, 0.1, 0.3, 0.5]))
+nn.forward_pass(inputs)
+nn.backward_pass(inputs, 0.01, [0.5, 0.2])
 
 
 
