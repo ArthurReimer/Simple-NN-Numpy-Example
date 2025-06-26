@@ -1,6 +1,6 @@
 import numpy as np
 import time
-import tensorflow as tf
+
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -17,7 +17,7 @@ class Layer:
         self.activations = np.empty(neuron_amount, float)
         self.deltas = np.empty(neuron_amount, float)
 
-class NN:
+class Network:
     def __init__(self):
         self.layers = []
 
@@ -69,47 +69,3 @@ def format_target(target):
     new_arr = np.zeros(10)
     new_arr[target] = 1
     return np.array(new_arr)
-
-
-mnist = tf.keras.datasets.mnist
-
-(train_X, train_y), (test_X, test_y) = mnist.load_data()
-
-train_X = train_X / 255.0
-test_X = test_X / 255.0
-
-nn = NN()
-nn.add_layer(784, 96)
-nn.add_layer(96, 48)
-nn.add_layer(48, 10)
-nn.setup()
-
-epochs = 5
-learning_rate = 0.009
-
-for e in range(epochs):
-    start_time = time.time()
-
-    correct_predictions = 0
-    total_loss = 0
-
-    for i in range(len(train_X)):
-        inputs = flatten(train_X[i])
-        target = format_target(train_y[i])
-
-        nn.forward_pass(inputs)
-        output = nn.return_output()
-
-        prediction = np.argmax(output)
-        if prediction == train_y[i]:
-            correct_predictions += 1
-
-        nn.backward_pass(inputs, learning_rate, target)
-
-        total_loss += MSE_Loss(output, target)
-
-    epoch_duration = time.time() - start_time
-    avg_loss = total_loss / len(train_y)
-    accuracy = correct_predictions / len(train_y) * 100
-
-    print(f"Epoch {e + 1}: Loss = {avg_loss:.4f}, Accuracy = {accuracy:.4f}%, Time = {epoch_duration:.2f} sec")
