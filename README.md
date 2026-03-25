@@ -5,10 +5,10 @@ This is an example of an NN in Python with just numpy andworks  well with the MN
 
 ## Test results
 ### Network
-Input Layer: 784 Neurons
-Hidden Layer 1: 48 Neurons
-Hidden Layer 2: 48 Neurons
-Output Layer: 10 Neurons
+- Input Layer: 784 Neurons
+- Hidden Layer 1: 48 Neurons
+- Hidden Layer 2: 48 Neurons
+- Output Layer: 10 Neurons
 > 40416 Total Weights
 
 ### Output
