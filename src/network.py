@@ -11,11 +11,11 @@ def deriv_sigmoid(activations):
 class Layer:
     def __init__(self, input_amount, neuron_amount):
         self.neuron_amount = neuron_amount
-        self.biases = np.empty(neuron_amount, float)
-        self.weights = np.empty((neuron_amount, input_amount), float)
-        self.net_inputs = np.empty(neuron_amount, float)
-        self.activations = np.empty(neuron_amount, float)
-        self.deltas = np.empty(neuron_amount, float)
+        self.biases = np.empty(neuron_amount, np.float32)
+        self.weights = np.empty((neuron_amount, input_amount), np.float32)
+        self.net_inputs = np.empty(neuron_amount, np.float32)
+        self.activations = np.empty(neuron_amount, np.float32)
+        self.deltas = np.empty(neuron_amount, np.float32)
 
 class Network:
     def __init__(self):
