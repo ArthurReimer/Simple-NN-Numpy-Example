@@ -1,6 +1,6 @@
 # Simple Neural Network
 ## Infos
-This is an example of an NN in Python with just numpy andworks  well with the MNIST test set. Tensorflow is only used for loading the dataset.
+This is an example of an NN in Python with just Numpy and works  well with the MNIST test set. Tensorflow is only used for loading the dataset.
 > Its supposed to be simple and not meant to be overly performant or fast, altough the speed is pretty decent for such a simple network.
 
 ## Test results
