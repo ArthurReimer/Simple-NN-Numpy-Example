@@ -4,10 +4,10 @@ This is an example of an NN in Python with just Numpy and works  well with the M
 > Its supposed to be simple and not meant to be overly performant or fast, altough the speed is pretty decent for such a simple network.
 
 ## Network
-- **Input Layer size** 784
-- **Hidden Layer 1:** 32 Neurons
-- **Hidden Layer 2:** 16 Neurons
-- **Output Layer size** 10
+- **Input Layer size:** ```784```
+- **Hidden Layer 1:** ```32 Neurons```
+- **Hidden Layer 2:** ```16 Neurons```
+- **Output Layer size:** ```10```
 
 ## Output
 ### Console
