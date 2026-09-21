@@ -1,7 +1,6 @@
 import numpy as np
 import time
 
-
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -32,7 +31,6 @@ class Network:
 
     def forward_pass(self, inputs):
         current_inputs = inputs
-    
 
         for layer in self.layers:
             layer.net_inputs = np.dot(layer.weights, current_inputs) + layer.biases
